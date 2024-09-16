@@ -2,32 +2,39 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
+        stage('Git Checkout') {
             steps {
-                // Git repository se code checkout karna
-                git 'https://github.com/Priyanshu498/tomcat_jenkis.git'
+                // Checkout the code from your Git repository
+                git url: 'https://github.com/Priyanshu498/tomcat_jenkis.git'
+               
+                
             }
         }
-        stage('Install Tomcat') {
-            steps {
-                // Tomcat install script ko run karna
-                sh 'bash path/to/your/tomcat-install-script.sh'
-            }
-        }
-        stage('Verify Installation') {
-            steps {
-                // Verify Tomcat installation (example check)
-                sh 'curl http://localhost:8080'
-            }
-        }
-    }
 
-    post {
-        success {
-            echo 'Tomcat installation was successful!'
+        stage('Dryrun Playbook') {
+            steps {
+                // Use SSH credentials to run the dry run of the Ansible playbook
+                withCredentials([sshUserPrivateKey(credentialsId: 'ubuntu', keyFileVariable: 'SSH_PRIVATE_KEY')]) {
+                    sh '''
+                    ansible-playbook -i tomcat/assignmet_0n_tool/tomcat/tests/inventory tomcat/assignmet_0n_tool/tomcat/tests/test.yml --check
+                    '''
+                }
+            }
         }
-        failure {
-            echo 'Tomcat installation failed.'
+
+        stage('Execute Playbook') {
+            input {
+                message "Do you want to perform apply?"
+                ok "Yes"
+            }
+            steps {
+                // Use SSH credentials to run the Ansible playbook
+                withCredentials([sshUserPrivateKey(credentialsId: 'ubuntu', keyFileVariable: 'SSH_PRIVATE_KEY')]) {
+                    sh '''
+                    ansible-playbook -i tomcat/assignmet_0n_tool/tomcat/tests/inventory tomcat/assignmet_0n_tool/tomcat/tests/test.yml
+                    '''
+                }
+            }
         }
     }
 }
