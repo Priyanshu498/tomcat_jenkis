@@ -1,1 +1,8 @@
-q
+---
+- name: Test Tomcat role
+  hosts: web
+  become: yes
+  roles:
+    - role: /home/ubuntu/tomcat/assignmet_0n_tool/tomcat
+      tomcat_group: "tomcat"
+      tomcat_user: "tomcat"
